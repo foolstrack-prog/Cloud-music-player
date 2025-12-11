@@ -1,10 +1,11 @@
 // --- Data (sample tracks) ---
 const TRACKS = [
-  {id:'jfKfPfyJRdk', title:'Peaceful Clouds', artist:'Clouds Collective', thumb:'https://i.imgur.com/4ZQZ4bM.jpeg', lyrics:[
+  // FIXED: Replaced broken imgur links with working placeholder image URLs
+  {id:'jfKfPfyJRdk', title:'Peaceful Clouds', artist:'Clouds Collective', thumb:'https://images.pexels.com/photos/1036378/pexels-photo-1036378.jpeg?auto=compress&cs=tinysrgb&h=640', lyrics:[
     'Gentle winds above the sea', 'Softly hum the lullabies', 'Clouds drift in harmony', 'Dreams unfold behind closed eyes'
   ]},
-  {id:'DWcJFNfaw9c', title:'Deep Chill Mix', artist:'Night Loop', thumb:'https://i.imgur.com/3z3Z1HB.jpeg', lyrics:['Lofi beats in the midnight sky','Warm glow, we fly high','Slow steps, heart sighs','Keep the rhythm, hush the night']},
-  {id:'5qap5aO4i9A', title:'Lofi Beats', artist:'Lo Studio', thumb:'https://i.imgur.com/EIhGxqB.jpeg', lyrics:['Raindrops tap the window','Coffee steam and soft echo','Studio lights dim low','Lofi winds begin to blow']}
+  {id:'DWcJFNfaw9c', title:'Deep Chill Mix', artist:'Night Loop', thumb:'https://images.pexels.com/photos/1484831/pexels-photo-1484831.jpeg?auto=compress&cs=tinysrgb&h=640', lyrics:['Lofi beats in the midnight sky','Warm glow, we fly high','Slow steps, heart sighs','Keep the rhythm, hush the night']},
+  {id:'5qap5aO4i9A', title:'Lofi Beats', artist:'Lo Studio', thumb:'https://images.pexels.com/photos/210182/pexels-photo-210182.jpeg?auto=compress&cs=tinysrgb&h=640', lyrics:['Raindrops tap the window','Coffee steam and soft echo','Studio lights dim low','Lofi winds begin to blow']}
 ];
 
 // --- State ---
@@ -59,6 +60,7 @@ function loadTrackToYT(id){
 // --- Play / Pause controls ---
 $('playBtn').addEventListener('click', ()=>{ togglePlay(); });
 $('miniPlayBtn').addEventListener('click', (e)=>{ e.stopPropagation(); togglePlay(); });
+$('nowPlay').addEventListener('click', ()=>{ togglePlay(); }); // Added click handler for 'Now Playing' panel
 function togglePlay(){
   // Attempt to start audio by focusing iframe (best-effort); some browsers require gesture
   if(!isPlaying){ isPlaying=true; $('playBtn').textContent='⏸'; $('miniPlayBtn').textContent='⏸'; $('nowPlay').textContent='Pause'; startProgress(); } else { isPlaying=false; $('playBtn').textContent='▶'; $('miniPlayBtn').textContent='▶'; $('nowPlay').textContent='Play'; stopProgress(); }
@@ -84,10 +86,45 @@ $('nowPlaying').addEventListener('click', (e)=>{ if(e.target.id==='nowPlaying') 
 $('miniPlayer').addEventListener('click', ()=>{ $('nowPlaying').style.display='flex'; });
 
 // --- Search ---
-$('searchInput').addEventListener('input', (e)=>{ const q=e.target.value.toLowerCase(); const g=$('grid'); g.innerHTML=''; TRACKS.filter(t=>t.title.toLowerCase().includes(q)||t.artist.toLowerCase().includes(q)).forEach((t,i)=>{ const c=document.createElement('div'); c.className='card'; c.innerHTML=`<img src="${t.thumb}"><div class='title'>${t.title}</div><div class='sub'>${t.artist}</div>`; c.onclick=()=>selectTrack(TRACKS.indexOf(t)); g.appendChild(c); }); });
+$('searchInput').addEventListener('input', (e)=>{ 
+  const q=e.target.value.toLowerCase(); 
+  const g=$('grid'); g.innerHTML=''; 
+  // FIXED: Use TRACKS.indexOf(t) to get the correct index from the master list
+  TRACKS.filter(t=>t.title.toLowerCase().includes(q)||t.artist.toLowerCase().includes(q))
+        .forEach((t)=>{ 
+          const c=document.createElement('div'); c.className='card'; 
+          c.innerHTML=`<img src="${t.thumb}"><div class='title'>${t.title}</div><div class='sub'>${t.artist}</div>`; 
+          // FIX APPLIED HERE: Get the index from the master TRACKS array
+          c.onclick=()=>selectTrack(TRACKS.indexOf(t)); 
+          g.appendChild(c); 
+        }); 
+});
 
 // --- Theme toggle (simple) ---
-let dark=true; $('themeBtn').addEventListener('click', ()=>{ dark=!dark; if(!dark){ document.body.style.background='linear-gradient(180deg,#f6f9ff,#eaf6ff)'; document.body.style.color='#022'; } else { document.body.style.background='linear-gradient(180deg,#05121a 0%, #071025 100%)'; document.body.style.color='#e6eef8'; } });
+let dark=true; 
+$('themeBtn').addEventListener('click', ()=>{ 
+    dark=!dark; 
+    const root = document.documentElement; // Get the root HTML element
+    if(!dark){ 
+        // Light Theme Variables
+        root.style.setProperty('--bg', '#f0f3f8');
+        root.style.setProperty('--panel', '#ffffff');
+        root.style.setProperty('--muted', '#4a5568');
+        root.style.setProperty('--accent', '#60a5fa');
+        root.style.setProperty('--glass', 'rgba(0,0,0,0.08)');
+        document.body.style.color='#022';
+        document.body.style.background='linear-gradient(180deg,#f6f9ff,#eaf6ff)';
+    } else { 
+        // Dark Theme Variables (original)
+        root.style.setProperty('--bg', '#07101a');
+        root.style.setProperty('--panel', '#0f1724');
+        root.style.setProperty('--muted', '#9aa6b2');
+        root.style.setProperty('--accent', '#6ee7b7');
+        root.style.setProperty('--glass', 'rgba(255,255,255,0.03)');
+        document.body.style.color='#e6eef8';
+        document.body.style.background='linear-gradient(180deg,#05121a 0%, #071025 100%)'; 
+    } 
+});
 
 // --- Favorites (localStorage) ---
 const FAV_KEY='clouds_favs_v1'; function loadFavs(){ try{return JSON.parse(localStorage.getItem(FAV_KEY)||'{}')}catch(e){return{}} }
