@@ -1,0 +1,92 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Clouds — Premium Music (Spotify-style)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="bgCanvas" style="position:fixed;inset:0;z-index:-2;pointer-events:none"></canvas>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">CLOUDS</div>
+    <div class="searchBox">
+      <input id="searchInput" placeholder="Search tracks, artists..." />
+      <button class="btn" id="themeBtn">Theme</button>
+    </div>
+    <nav class="nav">
+      <a href="#" data-section="home">Home</a>
+      <a href="#" data-section="library">Your Library</a>
+      <a href="#" data-section="favorites">Favorites</a>
+      <a href="#" data-section="trending">Top Mixes</a>
+    </nav>
+    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
+      <div class="btn" id="loginBtn">Login / Profile</div>
+      <div class="btn" id="downloadBtn">Download ZIP</div>
+    </div>
+  </aside>  <main class="main">
+    <div class="header">
+      <div>
+        <div class="sectionTitle">Recommended for You</div>
+        <div class="small muted">Daily mixes • Cloud-inspired</div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="shuffleBtn">Shuffle</button>
+        <button class="btn" id="repeatBtn">Repeat</button>
+        <div class="themeToggle">
+          <label style="color:var(--muted);font-size:13px">Theme</label>
+        </div>
+      </div>
+    </div><div class="grid" id="grid"></div>
+
+  </main>
+</div><div class="playerBar" id="playerBar">
+  <div class="playInfo">
+    <img id="barArt" src="https://i.imgur.com/4ZQZ4bM.jpeg" />
+    <div class="trackMeta">
+      <div class="trackTitle" id="barTitle">Peaceful Clouds</div>
+      <div class="trackArtist" id="barArtist">Clouds Collective</div>
+    </div>
+  </div>  <div class="controlsCenter">
+    <button class="iconBtn" id="prevBtn">⏮</button>
+    <button class="iconBtn" id="playBtn">▶</button>
+    <button class="iconBtn" id="nextBtn">⏭</button>
+    <div style="width:10px"></div>
+    <div class="progressWrap">
+      <div class="time" id="timeCur">0:00</div>
+      <div class="progress" id="progressBar"><div></div></div>
+      <div class="time" id="timeTotal">0:00</div>
+    </div>
+  </div>  <div style="display:flex;align-items:center;gap:10px">
+    <button class="btn" id="openNow">Now</button>
+  </div>
+</div><div class="nowPlaying" id="nowPlaying">
+  <div class="nowPanel">
+    <div class="nowArt"><img id="nowArtImg" src="https://i.imgur.com/4ZQZ4bM.jpeg" style="width:100%;height:100%;object-fit:cover"/></div>
+    <div class="nowMeta">
+      <h2 id="nowTitle">Peaceful Clouds</h2>
+      <div id="nowArtist">Clouds Collective</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn primary" id="nowPlay">Play</button>
+        <button class="btn" id="favBtn">♡</button>
+        <button class="btn" id="shareBtn">Share</button>
+      </div>
+      <div class="lyrics" id="lyricsBox"></div>
+    </div>
+  </div>
+</div><div class="miniPlayer" id="miniPlayer">
+  <img id="miniImg" src="https://i.imgur.com/4ZQZ4bM.jpeg" />
+  <div style="flex:1;min-width:0">
+    <div id="miniTitle">Peaceful Clouds</div>
+    <div style="font-size:12px;color:var(--muted)">Clouds • Chill</div>
+  </div>
+  <button class="btn" id="miniPlayBtn">▶</button>
+</div><div id="ytHolder" style="display:none"></div><div id="loader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(2,6,23,0.95),rgba(2,6,23,0.95));z-index:2000">
+  <lottie-player autoplay loop src="https://assets4.lottiefiles.com/packages/lf20_jzfgw4f2.json" style="width:140px;height:140px"></lottie-player>
+</div><script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+</body>
+</html>

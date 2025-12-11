@@ -1,0 +1,24 @@
+:root{
+  --bg:#07101a; --panel:#0f1724; --muted:#9aa6b2; --accent:#6ee7b7; --glass:rgba(255,255,255,0.03);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:linear-gradient(180deg,#05121a 0%, #071025 100%);color:#e6eef8}
+.app{display:grid;grid-template-columns:260px 1fr;gap:20px;height:100vh;padding:18px}
+.sidebar{background:linear-gradient(180deg,#06070a, #07101a);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);display:flex;flex-direction:column;gap:12px}
+.logo{font-weight:800;font-size:18px;letter-spacing:0.6px}
+.nav a{display:block;color:var(--muted);text-decoration:none;padding:8px;border-radius:8px}
+.nav a:hover{background:rgba(255,255,255,0.02);color:#fff}
+.searchBox{display:flex;gap:8px;align-items:center}
+.searchBox input{flex:1;padding:10px;border-radius:10px;border:none;background:rgba(255,255,255,0.02);color:#e6eef8}.main{padding:18px;overflow:auto} .header{display:flex;align-items:center;justify-content:space-between;gap:12px} .sectionTitle{font-size:20px;font-weight:700} .controls{display:flex;gap:8px;align-items:center} .btn{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer} .btn.primary{background:linear-gradient(90deg,var(--accent),#60a5fa);color:#022}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;margin-top:18px} .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:12px;cursor:pointer;transition:transform .18s,box-shadow .18s} .card:hover{transform:translateY(-6px);box-shadow:0 10px 30px rgba(2,6,23,0.6)} .card img{width:100%;height:140px;object-fit:cover;border-radius:8px} .card .title{font-weight:700;margin-top:8px} .card .sub{color:var(--muted);font-size:13px}
+
+/* Player bar (bottom) */ .playerBar{position:fixed;left:18px;right:18px;bottom:18px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));backdrop-filter:blur(6px);border-radius:14px;padding:12px;display:flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.03);z-index:1200} .playInfo{display:flex;align-items:center;gap:12px;min-width:260px} .playInfo img{width:64px;height:64px;border-radius:8px} .trackMeta{min-width:0} .trackTitle{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .trackArtist{color:var(--muted);font-size:13px} .controlsCenter{display:flex;align-items:center;gap:14px;flex:1;justify-content:center} .iconBtn{width:44px;height:44px;border-radius:8px;border:none;background:transparent;color:#e6eef8;font-size:18px;cursor:pointer} .progressWrap{display:flex;align-items:center;gap:12px;width:100%;max-width:680px} .progress{height:6px;background:rgba(255,255,255,0.04);border-radius:6px;overflow:hidden;flex:1} .progress > div{height:100%;width:0;background:linear-gradient(90deg,var(--accent),#60a5fa);} .time{font-size:12px;color:var(--muted);min-width:48px;text-align:center}
+
+/* Now Playing expanded */ .nowPlaying{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0.96),rgba(2,6,23,0.98));display:none;align-items:center;justify-content:center;z-index:1500} .nowPanel{width:100%;max-width:900px;background:linear-gradient(180deg,#071022,#081327);padding:20px;border-radius:12px;display:flex;gap:18px} .nowArt{width:320px;height:320px;border-radius:12px;overflow:hidden} .nowMeta{flex:1;display:flex;flex-direction:column;gap:12px} .nowMeta h2{margin:0} .lyrics{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;height:220px;overflow:auto}
+
+/* Mini player popout */ .miniPlayer{position:fixed;right:18px;bottom:120px;width:200px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:10px;border-radius:12px;display:flex;gap:8px;align-items:center;z-index:1300;cursor:pointer} .miniPlayer img{width:48px;height:48px;border-radius:8px}
+
+/* Theme toggle */ .themeToggle{display:flex;gap:8px;align-items:center}
+
+/* Responsive */ @media (max-width:900px){.app{grid-template-columns:1fr;grid-auto-rows:1fr}.sidebar{display:none}.playerBar{left:10px;right:10px}}
