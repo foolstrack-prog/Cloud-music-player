@@ -11,13 +11,81 @@ const TRACKS = [
 // --- State ---
 let current = 0;
 let isPlaying = false;
-let ytPlayer; // hidden YouTube iframe player
-let audioCtx, analyser, dataArr, sourceNode;
+let ytPlayer; // YouTube iframe player object
 let progressInterval;
+let duration = 0; // Total duration of the current track
 
 // --- Utility ---
 function $(id){return document.getElementById(id)}
 function fmt(s){const m=Math.floor(s/60), sec=Math.floor(s%60);return m+':'+(sec<10?'0'+sec:sec)}
+
+// ----------------------------------------------------
+// --- YouTube IFrame API Initialization (NEW CODE) ---
+// ----------------------------------------------------
+
+// 1. This function is called automatically by the API script once it is loaded and ready.
+function onYouTubeIframeAPIReady() {
+  // Create the player object and replace the 'ytHolder' div
+  ytPlayer = new YT.Player('ytHolder', { 
+    videoId: TRACKS[current].id, // Load the initial track
+    playerVars: {
+      'playsinline': 1,
+      'enablejsapi': 1,
+      'controls': 0, // Hide YouTube's built-in controls
+      'modestbranding': 1,
+      'rel': 0,
+      'autoplay': 0 // Must be 0 for full control and browser compatibility
+    },
+    events: {
+      'onReady': onPlayerReady,
+      'onStateChange': onPlayerStateChange
+    }
+  });
+  // Load the initial UI after the player object is created
+  updateNowPlaying();
+}
+
+// 2. Called when the player finishes loading
+function onPlayerReady(event) {
+  // Set the total duration once the player is ready
+  duration = event.target.getDuration();
+  $('timeTotalNow').textContent = fmt(duration); 
+}
+
+// 3. Called when the player's state changes (The most important function)
+function onPlayerStateChange(event) {
+  const state = event.data;
+  
+  if (state === YT.PlayerState.PLAYING) {
+    isPlaying = true;
+    updatePlayPauseUI('⏸');
+    startProgress(); // Start the progress tracker
+    // Update duration again just in case (e.g., after seeking/loading a new video)
+    duration = ytPlayer.getDuration();
+    $('timeTotalNow').textContent = fmt(duration); 
+    
+  } else if (state === YT.PlayerState.PAUSED || state === YT.PlayerState.BUFFERING) {
+    isPlaying = false;
+    updatePlayPauseUI('▶');
+    stopProgress(); // Stop the progress tracker
+    
+  } else if (state === YT.PlayerState.ENDED) {
+    isPlaying = false;
+    updatePlayPauseUI('▶');
+    stopProgress();
+    nextTrack(); // Automatically go to the next track
+  }
+}
+
+// Helper to update both play/pause buttons
+function updatePlayPauseUI(icon) {
+    if(playBtnBar) playBtnBar.textContent = icon;
+    if(playBtnNow) playBtnNow.textContent = icon;
+}
+
+// ----------------------------------------------------
+// --- Core Player Functions (UPDATED to use ytPlayer) ---
+// ----------------------------------------------------
 
 // --- Render grid ---
 function renderGrid(){
@@ -34,11 +102,14 @@ function renderGrid(){
 function selectTrack(i){ 
   current=i; 
   updateNowPlaying(); 
-  loadTrackToYT(TRACKS[i].id); 
   
-  // FIX: If the app is supposed to be playing, attempt to restart the new track immediately.
-  if (isPlaying) {
-      togglePlay(true); // Force play to restart UI and progress
+  if (ytPlayer && ytPlayer.loadVideoById) {
+      // Use loadVideoById to load the new track
+      ytPlayer.loadVideoById(TRACKS[i].id, 0); 
+      // If we were playing, try to play the new track immediately (subject to browser rules)
+      if (isPlaying) {
+          ytPlayer.playVideo(); 
+      }
   }
 }
 
@@ -60,90 +131,68 @@ function renderLyrics(){
   const box = $('lyricsBox'); box.innerHTML=''; TRACKS[current].lyrics.forEach((l,i)=>{ const p=document.createElement('p'); p.textContent=l; p.style.margin='6px 0'; box.appendChild(p)});
 }
 
-// --- YouTube iframe (hidden audio) ---
-function loadTrackToYT(id){
-  const holder = $('ytHolder'); holder.innerHTML = '';
-  const iframe = document.createElement('iframe');
-  
-  // FIX: Ensure autoplay=1 is in the URL
-  iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1`;
-  iframe.allow = 'autoplay';
-  iframe.width = '1'; iframe.height='1'; iframe.style.opacity='0'; holder.appendChild(iframe);
-  
-  // FIX: Reset fake position when loading a new track
-  fakePos = 0;
-  
-  // Note: cannot extract raw audio; we rely on iframe autoplay which some browsers may block until user interacts
-}
-
 // --- Play / Pause controls ---
 const playBtnBar = $('playBtn');
-const playBtnNow = $('playBtnNow'); // New button in expanded view
+const playBtnNow = $('playBtnNow'); 
 
 playBtnBar.addEventListener('click', ()=>{ togglePlay(); });
-// miniPlayBtn is removed in HTML
 if(playBtnNow) playBtnNow.addEventListener('click', ()=>{ togglePlay(); }); 
-// nowPlay is removed in HTML
 
-function togglePlay(forcePlay = false){ // Added optional argument to force play logic
+function togglePlay(forcePlay = false){
+  if (!ytPlayer) return;
+
   const shouldPlay = forcePlay || !isPlaying;
 
-  // Attempt to start audio by focusing iframe (best-effort); some browsers require gesture
   if(shouldPlay){ 
-    isPlaying=true; 
-    if(playBtnBar) playBtnBar.textContent='⏸'; 
-    if(playBtnNow) playBtnNow.textContent='⏸';
-    startProgress(); 
+    // This will trigger onPlayerStateChange -> PLAYING
+    ytPlayer.playVideo();
   } else { 
-    isPlaying=false; 
-    if(playBtnBar) playBtnBar.textContent='▶'; 
-    if(playBtnNow) playBtnNow.textContent='▶';
-    stopProgress(); 
+    // This will trigger onPlayerStateChange -> PAUSED
+    ytPlayer.pauseVideo();
   }
 }
 
-// --- Progress bar simulation (since we can't read duration reliably without YouTube API) ---
-let fakePos=0, fakeDur=180;
-function startProgress(){ clearInterval(progressInterval); progressInterval=setInterval(()=>{ if(!isPlaying) return; fakePos+=1; if(fakePos>fakeDur){ fakePos=0; nextTrack(); } updateProgress(); },1000); }
-function stopProgress(){ clearInterval(progressInterval); }
+// --- Progress bar (using real API time/duration) ---
+
+function startProgress(){ 
+    clearInterval(progressInterval); 
+    // Update progress every 250ms for smoother animation
+    progressInterval = setInterval(updateProgress, 250); 
+}
+
+function stopProgress(){ 
+    clearInterval(progressInterval); 
+}
+
 function updateProgress(){ 
-  const pct = Math.min(1, fakePos/fakeDur); 
-  
-  // Update Now Playing (expanded)
-  const progressBarNow = $('progressBarNow');
-  if(progressBarNow){
-      progressBarNow.firstElementChild.style.width = (pct*100)+'%';
-      $('timeCurNow').textContent = fmt(fakePos);
-      $('timeTotalNow').textContent = fmt(fakeDur);
-  }
-  // Note: There is no progress bar in the mini player (playerBar) in the mobile design
+    // Check if player is initialized and is playing
+    if(!ytPlayer || !isPlaying || duration === 0) return;
+
+    const curTime = ytPlayer.getCurrentTime(); 
+    const pct = Math.min(1, curTime / duration); 
+    
+    // Update Now Playing (expanded)
+    const progressBarNow = $('progressBarNow');
+    if(progressBarNow){
+        progressBarNow.firstElementChild.style.width = (pct*100)+'%';
+        $('timeCurNow').textContent = fmt(curTime);
+    }
 }
 
 // --- Next / Prev ---
 const nextBtnNow = $('nextBtnNow');
 const prevBtnNow = $('prevBtnNow');
 
-// Desktop bar buttons (reused for mobile skip function if needed)
-const nextBtnBar = $('nextBtn');
-const prevBtnBar = $('prevBtn');
-if (nextBtnBar) nextBtnBar.addEventListener('click', ()=>{ nextTrack(); }); 
-if (prevBtnBar) prevBtnBar.addEventListener('click', ()=>{ prevTrack(); });
-
-// Now Playing buttons
 if(nextBtnNow) nextBtnNow.addEventListener('click', ()=>{ nextTrack(); });
 if(prevBtnNow) prevBtnNow.addEventListener('click', ()=>{ prevTrack(); });
 
 function nextTrack(){ 
   current=(current+1)%TRACKS.length; 
-  updateNowPlaying(); 
-  loadTrackToYT(TRACKS[current].id); 
-  if(isPlaying) togglePlay(true); // FIX: Restart play on new track
+  selectTrack(current); // Use selectTrack for loading logic
 }
 function prevTrack(){ 
   current=(current-1+TRACKS.length)%TRACKS.length; 
-  updateNowPlaying(); 
-  loadTrackToYT(TRACKS[current].id); 
-  if(isPlaying) togglePlay(true); // FIX: Restart play on new track
+  selectTrack(current); // Use selectTrack for loading logic
 }
 
 // --- Now Playing expand / collapse ---
@@ -234,7 +283,8 @@ $('downloadBtn').addEventListener('click', ()=>{
 setTimeout(()=>{ const l=$('loader'); if(l) l.style.display='none'; },900);
 
 // --- Initialize app ---
-renderGrid(); selectTrack(0);
+renderGrid(); 
+// The initial track is loaded by the onYouTubeIframeAPIReady function.
 
 // --- Cloud background (soft particles) ---
 (function(){ const c=$('bgCanvas'); const ctx=c.getContext('2d'); function res(){ c.width=innerWidth; c.height=innerHeight; } res(); window.addEventListener('resize',res); const arr=[]; for(let i=0;i<30;i++){ arr.push({x:Math.random()*c.width,y:Math.random()*c.height,r:30+Math.random()*100,vx:0.2+Math.random()*0.6}); }
