@@ -37,7 +37,7 @@ function selectTrack(i){ current=i; updateNowPlaying(); loadTrackToYT(TRACKS[i].
 function updateNowPlaying(){
   const t = TRACKS[current];
   $('barArt').src = t.thumb; $('barTitle').textContent = t.title; $('barArtist').textContent = t.artist;
-  $('nowArtImg').src = t.thumb; $('nowTitle').textContent = t.title; $('nowArtist').textContent = t.artist; $('miniImg').src=t.thumb; $('miniTitle').textContent=t.title;
+  $('nowArtImg').src = t.thumb; $('nowTitle').textContent = t.title; $('nowArtist').textContent = t.artist; 
   renderLyrics();
 }
 
@@ -58,32 +58,82 @@ function loadTrackToYT(id){
 }
 
 // --- Play / Pause controls ---
-$('playBtn').addEventListener('click', ()=>{ togglePlay(); });
-$('miniPlayBtn').addEventListener('click', (e)=>{ e.stopPropagation(); togglePlay(); });
-$('nowPlay').addEventListener('click', ()=>{ togglePlay(); }); // Added click handler for 'Now Playing' panel
+const playBtnBar = $('playBtn');
+const playBtnNow = $('playBtnNow'); // New button in expanded view
+
+playBtnBar.addEventListener('click', ()=>{ togglePlay(); });
+playBtnNow.addEventListener('click', ()=>{ togglePlay(); }); // Listen to the new expanded play button
+
 function togglePlay(){
   // Attempt to start audio by focusing iframe (best-effort); some browsers require gesture
-  if(!isPlaying){ isPlaying=true; $('playBtn').textContent='⏸'; $('miniPlayBtn').textContent='⏸'; $('nowPlay').textContent='Pause'; startProgress(); } else { isPlaying=false; $('playBtn').textContent='▶'; $('miniPlayBtn').textContent='▶'; $('nowPlay').textContent='Play'; stopProgress(); }
+  if(!isPlaying){ 
+    isPlaying=true; 
+    playBtnBar.textContent='⏸'; 
+    playBtnNow.textContent='⏸';
+    startProgress(); 
+  } else { 
+    isPlaying=false; 
+    playBtnBar.textContent='▶'; 
+    playBtnNow.textContent='▶';
+    stopProgress(); 
+  }
 }
 
 // --- Progress bar simulation (since we can't read duration reliably without YouTube API) ---
 let fakePos=0, fakeDur=180;
 function startProgress(){ clearInterval(progressInterval); progressInterval=setInterval(()=>{ if(!isPlaying) return; fakePos+=1; if(fakePos>fakeDur){ fakePos=0; nextTrack(); } updateProgress(); },1000); }
 function stopProgress(){ clearInterval(progressInterval); }
-function updateProgress(){ const pct = Math.min(1, fakePos/fakeDur); $('progressBar').firstElementChild.style.width = (pct*100)+'%'; $('timeCur').textContent = fmt(fakePos); $('timeTotal').textContent = fmt(fakeDur); }
+function updateProgress(){ 
+  const pct = Math.min(1, fakePos/fakeDur); 
+  
+  // Update Bar (mini-player) - hidden on mobile, visible on desktop
+  const progressBar = $('progressBar');
+  if(progressBar){
+      progressBar.firstElementChild.style.width = (pct*100)+'%'; 
+      $('timeCur').textContent = fmt(fakePos); 
+      $('timeTotal').textContent = fmt(fakeDur);
+  }
+
+  // Update Now Playing (expanded)
+  const progressBarNow = $('progressBarNow');
+  if(progressBarNow){
+      progressBarNow.firstElementChild.style.width = (pct*100)+'%';
+      $('timeCurNow').textContent = fmt(fakePos);
+      $('timeTotalNow').textContent = fmt(fakeDur);
+  }
+}
 
 // --- Next / Prev ---
-$('nextBtn').addEventListener('click', ()=>{ nextTrack(); });
+const nextBtnNow = $('nextBtnNow');
+const prevBtnNow = $('prevBtnNow');
+
+// Bar buttons (reused for desktop and for mobile skip function if needed)
+$('nextBtn').addEventListener('click', ()=>{ nextTrack(); }); 
 $('prevBtn').addEventListener('click', ()=>{ prevTrack(); });
+
+// Now Playing buttons
+nextBtnNow.addEventListener('click', ()=>{ nextTrack(); });
+prevBtnNow.addEventListener('click', ()=>{ prevTrack(); });
+
 function nextTrack(){ current=(current+1)%TRACKS.length; fakePos=0; updateNowPlaying(); loadTrackToYT(TRACKS[current].id); if(isPlaying) startProgress(); }
 function prevTrack(){ current=(current-1+TRACKS.length)%TRACKS.length; fakePos=0; updateNowPlaying(); loadTrackToYT(TRACKS[current].id); if(isPlaying) startProgress(); }
 
 // --- Now Playing expand / collapse ---
-$('openNow').addEventListener('click', ()=>{ $('nowPlaying').style.display='flex'; });
-$('nowPlaying').addEventListener('click', (e)=>{ if(e.target.id==='nowPlaying') $('nowPlaying').style.display='none'; });
+$('playerBar').addEventListener('click', (e)=>{ 
+    // Open when clicking anywhere on the bar except the play button
+    if(e.target.id !== 'playBtn' && e.target.closest('#playBtn') === null){
+      $('nowPlaying').style.display='flex';
+    }
+});
 
-// --- Mini player open ---
-$('miniPlayer').addEventListener('click', ()=>{ $('nowPlaying').style.display='flex'; });
+$('nowPlaying').addEventListener('click', (e)=>{ 
+  // Allow closing by clicking the background
+  if(e.target.id==='nowPlaying') $('nowPlaying').style.display='none'; 
+});
+
+// Hide the redundant 'openNow' button
+const openNowBtn = $('openNow');
+if (openNowBtn) openNowBtn.style.display = 'none';
 
 // --- Search ---
 $('searchInput').addEventListener('input', (e)=>{ 
@@ -102,36 +152,41 @@ $('searchInput').addEventListener('input', (e)=>{
 
 // --- Theme toggle (simple) ---
 let dark=true; 
-$('themeBtn').addEventListener('click', ()=>{ 
-    dark=!dark; 
-    const root = document.documentElement; // Get the root HTML element
-    if(!dark){ 
-        // Light Theme Variables
-        root.style.setProperty('--bg', '#f0f3f8');
-        root.style.setProperty('--panel', '#ffffff');
-        root.style.setProperty('--muted', '#4a5568');
-        root.style.setProperty('--accent', '#60a5fa');
-        root.style.setProperty('--glass', 'rgba(0,0,0,0.08)');
-        document.body.style.color='#022';
-        document.body.style.background='linear-gradient(180deg,#f6f9ff,#eaf6ff)';
-    } else { 
-        // Dark Theme Variables (original)
-        root.style.setProperty('--bg', '#07101a');
-        root.style.setProperty('--panel', '#0f1724');
-        root.style.setProperty('--muted', '#9aa6b2');
-        root.style.setProperty('--accent', '#6ee7b7');
-        root.style.setProperty('--glass', 'rgba(255,255,255,0.03)');
-        document.body.style.color='#e6eef8';
-        document.body.style.background='linear-gradient(180deg,#05121a 0%, #071025 100%)'; 
-    } 
-});
+const themeBtn = $('themeBtn');
+if (themeBtn) {
+    themeBtn.addEventListener('click', ()=>{ 
+        dark=!dark; 
+        const root = document.documentElement; // Get the root HTML element
+        if(!dark){ 
+            // Light Theme Variables
+            root.style.setProperty('--bg', '#f0f3f8');
+            root.style.setProperty('--panel', '#ffffff');
+            root.style.setProperty('--muted', '#4a5568');
+            root.style.setProperty('--accent', '#60a5fa');
+            root.style.setProperty('--glass', 'rgba(0,0,0,0.08)');
+            document.body.style.color='#022';
+            document.body.style.background='#f0f3f8';
+        } else { 
+            // Dark Theme Variables (new default)
+            root.style.setProperty('--bg', '#000');
+            root.style.setProperty('--panel', '#121212');
+            root.style.setProperty('--muted', '#a7a7a7');
+            root.style.setProperty('--accent', '#1ed760');
+            root.style.setProperty('--glass', 'rgba(255,255,255,0.03)');
+            document.body.style.color='#fff';
+            document.body.style.background='var(--bg)';
+        } 
+    });
+}
 
 // --- Favorites (localStorage) ---
-const FAV_KEY='clouds_favs_v1'; function loadFavs(){ try{return JSON.parse(localStorage.getItem(FAV_KEY)||'{}')}catch(e){return{}} }
-let favs = loadFavs(); $('favBtn').addEventListener('click', ()=>{ const id=TRACKS[current].id; if(favs[id]) delete favs[id]; else favs[id]=true; localStorage.setItem(FAV_KEY, JSON.stringify(favs)); $('favBtn').textContent = favs[id]? '♥':'♡'; });
+const FAV_KEY='chorkidhun_favs_v1'; 
+function loadFavs(){ try{return JSON.parse(localStorage.getItem(FAV_KEY)||'{}')}catch(e){return{}} }
+let favs = loadFavs(); 
+// Since favBtn is now removed from HTML, we remove its listener as well.
 
 // --- Download ZIP (create simple zip of HTML) ---
-$('downloadBtn').addEventListener('click', ()=>{ const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='clouds-player.html'; a.click(); URL.revokeObjectURL(url); });
+$('downloadBtn').addEventListener('click', ()=>{ const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='chorkidhun-player.html'; a.click(); URL.revokeObjectURL(url); });
 
 // --- Auto-hide loader ---
 setTimeout(()=>{ const l=$('loader'); if(l) l.style.display='none'; },900);
@@ -139,9 +194,10 @@ setTimeout(()=>{ const l=$('loader'); if(l) l.style.display='none'; },900);
 // --- Initialize app ---
 renderGrid(); selectTrack(0);
 
-// --- Mini draggable (popout) ---
-(function(){ const mini=$('miniPlayer'); let down=false, startY=0, startX=0; mini.addEventListener('mousedown',(e)=>{ down=true; startY=e.clientY; startX=e.clientX; document.body.style.cursor='grabbing'; }); window.addEventListener('mousemove',(e)=>{ if(!down) return; mini.style.right=(window.innerWidth - e.clientX - 120)+'px'; mini.style.bottom=(window.innerHeight - e.clientY - 60)+'px'; }); window.addEventListener('mouseup',()=>{ down=false; document.body.style.cursor='default'; }); })();
+// --- Remove Mini draggable (popout) - it was removed from HTML
+// (function(){ const mini=$('miniPlayer'); let down=false, startY=0, startX=0; mini.addEventListener('mousedown',(e)=>{ down=true; startY=e.clientY; startX=e.clientX; document.body.style.cursor='grabbing'; }); window.addEventListener('mousemove',(e)=>{ if(!down) return; mini.style.right=(window.innerWidth - e.clientX - 120)+'px'; mini.style.bottom=(window.innerHeight - e.clientY - 60)+'px'; }); window.addEventListener('mouseup',()=>{ down=false; document.body.style.cursor='default'; }); })();
 
 // --- Cloud background (soft particles) ---
 (function(){ const c=$('bgCanvas'); const ctx=c.getContext('2d'); function res(){ c.width=innerWidth; c.height=innerHeight; } res(); window.addEventListener('resize',res); const arr=[]; for(let i=0;i<30;i++){ arr.push({x:Math.random()*c.width,y:Math.random()*c.height,r:30+Math.random()*100,vx:0.2+Math.random()*0.6}); }
   function loop(){ ctx.clearRect(0,0,c.width,c.height); for(const p of arr){ const g=ctx.createRadialGradient(p.x,p.y,p.r*0.1,p.x,p.y,p.r); g.addColorStop(0,'rgba(255,255,255,0.05)'); g.addColorStop(1,'rgba(255,255,255,0.01)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); p.x+=p.vx; if(p.x-p.r>c.width) p.x=-p.r; } requestAnimationFrame(loop); } loop(); })();
+}
