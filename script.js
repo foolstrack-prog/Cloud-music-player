@@ -43,6 +43,12 @@ function setLanguage(langCode) {
         }
         // Note: Functional translations (like timer_set_msg) are handled directly in the relevant event listeners.
     });
+    
+    // Re-render playlists to update the language-specific word "Songs"/"Chansons"
+    // This assumes MOCK_DATA.playlists has already been loaded once
+    if (MOCK_DATA.playlists.length > 0) {
+        renderHomePlaylists(MOCK_DATA.playlists);
+    }
 }
 
 // --- Spotify API Integration (MOCK Endpoints) ---
@@ -59,10 +65,14 @@ const MOCK_PREVIEW_URL = 'https://p.scdn.co/mp3-preview/a84f3f1e9e7b2a95c4793d9e
 
 // MOCK DATA structure to be used if the API call fails
 const MOCK_DATA = {
+    // Added more mock data for the Library screen as seen in the image
     playlists: [
         { id: '1', name: 'Starlit Reverie', artist: 'Budiarti', songs: 8, image_url: 'https://i.pravatar.cc/80?img=4', preview_url: MOCK_PREVIEW_URL },
         { id: '2', name: 'Midnight Confessions', artist: 'Alexiao', songs: 24, image_url: 'https://i.pravatar.cc/80?img=5', preview_url: MOCK_PREVIEW_URL },
-        { id: '3', name: 'Lost in the Echo', artist: 'Alexiao', songs: 24, image_url: 'https://i.pravatar.cc/80?img=8', preview_url: MOCK_PREVIEW_URL }
+        { id: '3', name: 'Lost in the Echo', artist: 'Alexiao', songs: 24, image_url: 'https://i.pravatar.cc/80?img=8', preview_url: MOCK_PREVIEW_URL },
+        { id: '4', name: 'Letters I Never Sent', artist: 'Budiarti', songs: 24, image_url: 'https://i.pravatar.cc/80?img=11', preview_url: MOCK_PREVIEW_URL },
+        { id: '5', name: 'Breaking the Silence', artist: 'Alexiao', songs: 24, image_url: 'https://i.pravatar.cc/80?img=12', preview_url: MOCK_PREVIEW_URL },
+        { id: '6', name: 'Tears on the Vinyl', artist: 'Budiarti', songs: 24, image_url: 'https://i.pravatar.cc/80?img=13', preview_url: MOCK_PREVIEW_URL },
     ]
 };
 
@@ -107,7 +117,8 @@ function loadAndPlayTrack(track) {
     // Update player UI
     document.querySelector('.track-title').textContent = track.name;
     document.querySelector('.track-artist').textContent = track.artist;
-    document.querySelector('.artwork-circle img').src = track.image_url;
+    // Update artwork in the player screen
+    document.querySelector('#now-playing-screen .artwork-circle img').src = track.image_url; 
     
     // Load and play audio
     audioPlayer.src = track.preview_url;
@@ -186,6 +197,7 @@ function renderHomePlaylists(playlists) {
     const playlistContainer = document.querySelector('.daily-playlists .playlist-list');
     playlistContainer.innerHTML = ''; 
 
+    // Render only the top 2 playlists for the Home Screen view
     playlists.slice(0, 2).forEach(p => {
         const item = document.createElement('div');
         item.className = 'playlist-item';
@@ -201,6 +213,7 @@ function renderHomePlaylists(playlists) {
         playlistContainer.appendChild(item);
     });
     
+    // Also render the full list for the Library screen
     renderLibraryList(playlists);
 }
 
@@ -237,20 +250,29 @@ const navIcons = document.querySelectorAll('.nav-icon');
 let currentScreen = 'home';
 const historyStack = ['home']; 
 
+/**
+ * Transitions to a new screen, simulating a Single Page Application (SPA) router.
+ * @param {string} screenName - The ID suffix of the screen to navigate to (e.g., 'home', 'myMusic').
+ */
 function navigateTo(screenName) {
     if (currentScreen === screenName) return;
 
+    // Logic to manage history, excluding 'nowPlaying' from the main back stack 
+    // unless it's explicitly the target from the main nav (which it isn't).
     if (screenName !== 'nowPlaying' && historyStack[historyStack.length - 1] !== screenName) {
         historyStack.push(screenName);
     }
     
+    // Deactivate all screens
     Object.values(screenMap).forEach(screen => screen.classList.remove('active'));
 
+    // Activate the target screen
     if (screenMap[screenName]) {
         screenMap[screenName].classList.add('active');
         currentScreen = screenName;
     }
 
+    // Update global navigation icons
     navIcons.forEach(icon => {
         icon.classList.remove('active');
         if (icon.getAttribute('data-screen') === screenName) {
@@ -261,8 +283,11 @@ function navigateTo(screenName) {
 
 function goBack() {
     if (historyStack.length > 1) {
+        // Pop the current screen off the stack
         historyStack.pop(); 
+        // Get the previous screen
         const lastScreen = historyStack[historyStack.length - 1];
+        // Navigate back to it
         navigateTo(lastScreen);
     }
 }
@@ -272,10 +297,11 @@ function goBack() {
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Set initial language
+    // Read the language from the select dropdown or default to 'en'
     const initialLang = document.getElementById('lang-select')?.value || 'en';
     setLanguage(initialLang);
     
-    // 2. Load data and playlists
+    // 2. Load data and playlists (MOCK mode)
     authenticateAndFetch();
     
     // 3. Global Navigation Listeners
