@@ -25,36 +25,31 @@
       <a href="#" data-section="trending">Top Mixes</a>
     </nav>
     <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
-      <div class="btn" id="loginBtn">Login / Profile</div>
-      <div class="btn" id="downloadBtn">Download ZIP</div>
+      <div class="btn" id="loginBtn">Login / Signup</div>
+      <div class="btn" id="downloadBtn">Download Player</div>
+      <button class="iconBtn" id="openPlayerBtn">Now Playing</button>
     </div>
-  </aside>  <main class="main">
-    <div class="header">
-      <div>
-        <div class="sectionTitle">Recommended for You</div>
-        <div class="small muted">Daily mixes • Cloud-inspired</div>
-      </div>
-      <div class="controls">
-        <div class="themeToggle">
-          <label style="color:var(--muted);font-size:13px">Theme</label>
-        </div>
-      </div>
-    </div><div class="grid" id="grid"></div>
+  </aside>
 
-  </main>
-</div>
-<div class="playerBar" id="playerBar">
-  <div class="playInfo">
-    <img id="barArt" src="https://images.pexels.com/photos/1036378/pexels-photo-1036378.jpeg?auto=compress&cs=tinysrgb&h=640" />
-    <div class="trackMeta">
-      <div class="trackTitle" id="barTitle">Peaceful Clouds</div>
-      <div class="trackArtist" id="barArtist">Clouds Collective</div>
+  <main class="main">
+    <div class="header">
+      <div class="searchBox">
+        <input id="searchInputMain" placeholder="Search tracks, artists..." />
+        <button class="btn" id="themeBtnMain">Theme</button>
+      </div>
+      <button class="iconBtn" id="openPlayerBtnMain">Now Playing</button>
     </div>
-  </div>  
-  <button class="iconBtn" id="playBtn">▶</button>
+
+    <div class="section" data-section="home">
+      <h2>Welcome Back, ChorKi Dhun User</h2>
+      <div class="grid" id="trackGrid"></div>
+    </div>
+  </main>
 </div>
 
 <div class="nowPlaying" id="nowPlaying">
+  <button class="iconBtn closeBtn" id="closeBtn">X</button>
+  <button class="iconBtn favBtn" id="favBtn">♡</button>
   <div class="nowPanel">
     <div class="nowArt"><img id="nowArtImg" src="https://images.pexels.com/photos/1036378/pexels-photo-1036378.jpeg?auto=compress&cs=tinysrgb&h=640" style="width:100%;height:100%;object-fit:cover"/></div>
     <div class="nowMeta">
@@ -79,11 +74,10 @@
 </div>
 
 <div id="ytHolder" style="display:none"></div>
-<div id="loader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(2,6,23,0.95),rgba(2,6,23,0.95));z-index:2000">
-  <lottie-player autoplay loop src="https://assets4.lottiefiles.com/packages/lf20_jzfgw4f2.json" style="width:140px;height:140px"></lottie-player>
+<div id="loader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(2,6,23,0.95),rgba(2,6,23,0.95),rgba(2,6,23,0.95))">
+  <div class="spinner"></div>
 </div>
-<script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-<script src="https://www.youtube.com/iframe_api"></script> 
+
 <script src="script.js"></script>
 </body>
 </html>
