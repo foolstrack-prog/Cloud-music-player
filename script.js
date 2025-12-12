@@ -1,339 +1,301 @@
-// --- Data (Expanded, Multilingual Track List) ---
-const TRACKS = [
-  // Hindi Pop/Bollywood Tracks (Simulated Playlist from your request)
-  {id:'y_m-AWX8p9c', title:'Pasoori', artist:'Shae Gill, Ali Sethi', thumb:'https://i.ytimg.com/vi/y_m-AWX8p9c/maxresdefault.jpg', lyrics:[
-    'Agg laawan majboori nu',
-    'Aan jan de pasoori nu',
-    'Aana si oh nahi aaya',
-    'Dil baariyan'
-  ]},
-  {id:'hFj-2t4T91w', title:'Tum Hi Ho (Aashiqui 2)', artist:'Arijit Singh', thumb:'https://i.ytimg.com/vi/hFj-2t4T91w/maxresdefault.jpg', lyrics:[
-    'Hum tere bin ab reh nahi sakte', 
-    'Tere bina kya wajood mera',
-    'Tujhse juda agar ho jaayenge',
-    'Toh khud se hi ho jaayenge juda'
-  ]},
-  {id:'g0-o8g9m86o', title:'Kesariya (Brahmastra)', artist:'Arijit Singh, Pritam', thumb:'https://i.ytimg.com/vi/g0-o8g9m86o/maxresdefault.jpg', lyrics:[
-    'Kesariya tera ishq hai piya',
-    'Rang jaaun jo main haath lagaun',
-    'Behke behke kadam hain mere',
-    'Tere saath hi thehar jaaun'
-  ]},
-  {id:'JcKkYv7zCIs', title:'Kaise Hua (Kabir Singh)', artist:'Vishal Mishra', thumb:'https://i.ytimg.com/vi/JcKkYv7zCIs/maxresdefault.jpg', lyrics:[
-    'Hothon pe naam hai tera',
-    'Mujhme kahin hai basera',
-    'Tera hi toh sara jahan hai',
-    'Kaise hua, kaise hua'
-  ]},
-  {id:'apM480lq3oY', title:'Despacito (International Example)', artist:'Luis Fonsi ft. Daddy Yankee', thumb:'https://i.ytimg.com/vi/apM480lq3oY/maxresdefault.jpg', lyrics:[
-    'Des-pa-cito',
-    'Quiero respirar tu cuello despacito',
-    'Deja que te diga cosas al oído',
-    'Para que te acuerdes si no estás conmigo'
-  ]},
-  
-  // Lofi/Background Track (Kept one for contrast)
-  {id:'jfKfPfyJRdk', title:'Peaceful Clouds (Lofi)', artist:'Clouds Collective', thumb:'https://images.pexels.com/photos/1036378/pexels-photo-1036378.jpeg?auto=compress&cs=tinysrgb&h=640', lyrics:[
-    'Gentle winds above the sea', 'Softly hum the lullabies', 'Clouds drift in harmony', 'Dreams unfold behind closed eyes'
-  ]}
-];
+// --- I18N (Multi-Language) Data and Functions ---
 
-// --- State ---
-let current = 0;
-let isPlaying = false;
-let ytPlayer; // YouTube iframe player object
-let progressInterval;
-const FAV_KEY = 'chorkiFavs';
+const translations = {
+    en: { 
+        'hi_user': 'Hi, Samantha', 
+        'now_playing': 'Now Playing',
+        'my_music': 'My Music',
+        'discover_weekly': 'Discover weekly',
+        'top_playlists': 'Top daily playlists',
+        'tracks': 'Tracks',
+        'songs': 'Songs',
+        'library': 'Library',
+        'sleep_timer_title': 'Set Sleep Timer',
+        'timer_set_msg': (mins) => `Sleep timer set for ${mins} minutes.`,
+        'timer_end_msg': 'Sleep timer ended. Music paused.'
+    },
+    fr: { 
+        'hi_user': 'Salut, Samantha', 
+        'now_playing': 'En cours de lecture',
+        'my_music': 'Ma Musique',
+        'discover_weekly': 'Découvrir chaque semaine',
+        'top_playlists': 'Meilleures playlists quotidiennes',
+        'tracks': 'Pistes',
+        'songs': 'Chansons',
+        'library': 'Bibliothèque',
+        'sleep_timer_title': 'Régler la minuterie de sommeil',
+        'timer_set_msg': (mins) => `Minuterie réglée pour ${mins} minutes.`,
+        'timer_end_msg': 'Minuterie terminée. Musique en pause.'
+    }
+};
 
-// --- Helpers ---
-const $ = (id) => document.getElementById(id);
-const $$ = (sel) => document.querySelectorAll(sel);
-const addClass = (el, cn) => el.classList.add(cn);
-const removeClass = (el, cn) => el.classList.remove(cn);
-const hasClass = (el, cn) => el.classList.contains(cn);
+let currentLanguage = 'en';
 
-
-// --- Player Logic (Uses YouTube IFrame Player API) ---
-
-// 1. Load the YouTube IFrame Player API script asynchronously
-const tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-const firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-// 2. This function is automatically called by the API when the script is loaded
-function onYouTubeIframeAPIReady() {
-    // Hide the loader once API is ready
-    const l=$('loader'); if(l) l.style.display='none';
-
-    ytPlayer = new YT.Player('ytHolder', {
-        height: '1', // Minimized size for "audio-only"
-        width: '1',  // Minimized size for "audio-only"
-        videoId: TRACKS[current].id, // Load the first song
-        events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
-        },
-        playerVars: {
-            'playsinline': 1,
-            'controls': 0, // IMPORTANT: We use our custom controls
-            'modestbranding': 1,
-            'rel': 0, 
-            'autoplay': 0,
-            'disablekb': 1, // Disable keyboard controls (for a pure UI experience)
-            'iv_load_policy': 3 // Disable annotations
+function setLanguage(langCode) {
+    currentLanguage = langCode;
+    // Iterate through all elements with a 'data-i18n' attribute and update their text
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        const translationValue = translations[langCode][key];
+        
+        if (typeof translationValue === 'string') {
+            el.textContent = translationValue;
         }
+        // Note: Functional translations (like timer_set_msg) are handled directly in the relevant event listeners.
     });
 }
 
-// 3. The API calls this function when the video player is ready.
-function onPlayerReady(event) {
-    // Load the UI for the first song
-    renderNowPlaying(TRACKS[current]);
-    updateTime(0);
-}
+// --- Spotify API Integration (MOCK Endpoints) ---
+// IMPORTANT: These URLs are placeholders and rely on a secure backend server you must create.
 
-// 4. The API calls this function when the player's state changes
-function onPlayerStateChange(event) {
-    if (event.data === YT.PlayerState.PLAYING) {
-        isPlaying = true;
-        addClass($('nowPlaying'), 'playing');
-        $('playBtnNow').textContent = '⏸';
-        if (!progressInterval) {
-            progressInterval = setInterval(updateProgress, 1000); // Start progress bar update
-        }
-    } else if (event.data === YT.PlayerState.PAUSED) {
-        isPlaying = false;
-        removeClass($('nowPlaying'), 'playing');
-        $('playBtnNow').textContent = '▶';
-        clearInterval(progressInterval);
-        progressInterval = null;
-    } else if (event.data === YT.PlayerState.ENDED) {
-        // Go to the next track when the current one ends
-        playNext();
-    }
-}
+const API_PLACEHOLDERS = {
+    GET_TOKEN: '/api/spotify/get-token', // Your backend endpoint
+    GET_PLAYLISTS: '/api/spotify/featured-playlists', // Your backend endpoint
+};
 
+let spotifyAccessToken = null;
+// This is a publicly available Spotify preview track URL used for demonstration
+const MOCK_PREVIEW_URL = 'https://p.scdn.co/mp3-preview/a84f3f1e9e7b2a95c4793d9e075d6910a56e01a8?cid=ec16e537d1184a4497e6417721835926'; 
 
-// --- UI Rendering ---
+// MOCK DATA structure to be used if the API call fails
+const MOCK_DATA = {
+    playlists: [
+        { id: '1', name: 'Starlit Reverie', artist: 'Budiarti', songs: 8, image_url: 'https://i.pravatar.cc/80?img=4', preview_url: MOCK_PREVIEW_URL },
+        { id: '2', name: 'Midnight Confessions', artist: 'Alexiao', songs: 24, image_url: 'https://i.pravatar.cc/80?img=5', preview_url: MOCK_PREVIEW_URL },
+        { id: '3', name: 'Lost in the Echo', artist: 'Alexiao', songs: 24, image_url: 'https://i.pravatar.cc/80?img=8', preview_url: MOCK_PREVIEW_URL }
+    ]
+};
 
-// Render a single track card in the grid
-function renderTrack(track, index) {
-    const card = document.createElement('div');
-    addClass(card, 'card');
-    card.dataset.index = index;
-
-    card.innerHTML = `
-        <div class="cardArt">
-            <img src="${track.thumb}" loading="lazy" />
-            <button class="playBtn">▶</button>
-        </div>
-        <h3>${track.title}</h3>
-        <p>${track.artist}</p>
-    `;
+async function authenticateAndFetch() {
+    console.log("Attempting to fetch data via API (MOCK mode)...");
     
-    card.querySelector('.playBtn').addEventListener('click', (e) => {
-        e.stopPropagation(); 
-        selectTrack(index);
-    });
-    
-    card.addEventListener('click', () => {
-        selectTrack(index);
-        openNowPlaying();
-    });
+    // In a real application, replace this with your actual token fetching logic.
+    // For now, we render mock data immediately.
+    renderHomePlaylists(MOCK_DATA.playlists); 
 
-    $('trackGrid').appendChild(card);
-}
-
-// Render the full grid of tracks
-function renderGrid() {
-    const grid = $('trackGrid');
-    grid.innerHTML = ''; 
-    TRACKS.forEach(renderTrack);
-}
-
-// Render the full player UI for the currently playing track
-function renderNowPlaying(track) {
-    $('nowArtImg').src = track.thumb;
-    $('nowTitle').textContent = track.title;
-    $('nowArtist').textContent = track.artist;
-    
-    // Render lyrics, joining the array with line breaks
-    $('lyricsBox').innerHTML = track.lyrics.map(line => `<p>${line}</p>`).join('');
-    
-    updateFavoriteBtn(track.id);
-}
-
-// --- Player Controls ---
-
-// Update the time display (0:00 / 3:30)
-function updateTime(currentTime) {
-    const duration = ytPlayer.getDuration();
-    const formatTime = (seconds) => {
-        const minutes = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
-    };
-
-    $('timeCurNow').textContent = formatTime(currentTime);
-    $('timeTotalNow').textContent = formatTime(duration);
-}
-
-// Update the progress bar and time display every second
-function updateProgress() {
-    if (ytPlayer && ytPlayer.getDuration) {
-        const currentTime = ytPlayer.getCurrentTime();
-        const duration = ytPlayer.getDuration();
-        const progressPercent = (currentTime / duration) * 100;
-
-        $('progressBarNow').querySelector('div').style.width = `${progressPercent}%`;
-        updateTime(currentTime);
-    }
-}
-
-// Handle progress bar clicks to seek the video
-$('progressBarNow').addEventListener('click', (e) => {
-    const rect = $('progressBarNow').getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percent = clickX / rect.width;
-    const duration = ytPlayer.getDuration();
-    const newTime = duration * percent;
-    
-    if (ytPlayer && duration) {
-        ytPlayer.seekTo(newTime, true);
-    }
-});
-
-// Select and play a specific track by index
-function selectTrack(index) {
-    current = index;
-    const track = TRACKS[current];
-    
-    // Load the new video, this will trigger onPlayerStateChange and start playing
-    ytPlayer.loadVideoById(track.id, 0);
-    renderNowPlaying(track);
-}
-
-// Play/Pause toggle
-function togglePlay() {
-    if (isPlaying) {
-        ytPlayer.pauseVideo();
-    } else {
-        ytPlayer.playVideo();
-    }
-}
-
-// Play the next track in the list
-function playNext() {
-    current = (current + 1) % TRACKS.length;
-    selectTrack(current);
-}
-
-// Play the previous track in the list
-function playPrev() {
-    current = (current - 1 + TRACKS.length) % TRACKS.length;
-    selectTrack(current);
-}
-
-// --- Event Listeners and UI ---
-
-// Control button listeners
-$('playBtnNow').addEventListener('click', togglePlay);
-$('prevBtnNow').addEventListener('click', playPrev);
-$('nextBtnNow').addEventListener('click', playNext);
-
-// Open/Close expanded player
-$('openPlayerBtn').addEventListener('click', () => openNowPlaying());
-$('closeBtn').addEventListener('click', () => closeNowPlaying());
-
-function openNowPlaying() {
-    addClass($('nowPlaying'), 'active');
-}
-
-function closeNowPlaying() {
-    removeClass($('nowPlaying'), 'active');
-}
-
-// --- Favorites Logic ---
-function getFavs() {
+    /* Example of real API interaction structure:
     try {
-        return JSON.parse(localStorage.getItem(FAV_KEY) || '{}');
-    } catch (e) {
-        console.error('Error parsing favorites from localStorage:', e);
-        return {};
+        const response = await fetch(API_PLACEHOLDERS.GET_TOKEN); 
+        const data = await response.json();
+        spotifyAccessToken = data.access_token;
+        if (spotifyAccessToken) {
+            fetchFeaturedPlaylists();
+        }
+    } catch (error) {
+        console.warn("API Error - Using mock data.");
+        renderHomePlaylists(MOCK_DATA.playlists);
+    }
+    */
+}
+
+// --- Audio Playback and Control ---
+
+const audioPlayer = new Audio();
+let isPlaying = false;
+let sleepTimerId = null;
+
+/**
+ * Loads track data into the player UI and starts playback.
+ * @param {object} track - A mock track object containing name, artist, image_url, and preview_url.
+ */
+function loadAndPlayTrack(track) {
+    if (!track || !track.preview_url) {
+        alert("Track not available for preview.");
+        return;
+    }
+    
+    // Update player UI
+    document.querySelector('.track-title').textContent = track.name;
+    document.querySelector('.track-artist').textContent = track.artist;
+    document.querySelector('.artwork-circle img').src = track.image_url;
+    
+    // Load and play audio
+    audioPlayer.src = track.preview_url;
+    audioPlayer.load();
+    audioPlayer.play().catch(e => console.error("Playback error:", e));
+    
+    isPlaying = true;
+    updatePlayPauseButton();
+    navigateTo('nowPlaying'); // Transition to Now Playing screen
+}
+
+function updatePlayPauseButton() {
+    const playPauseBtn = document.querySelector('.play-pause-btn');
+    playPauseBtn.textContent = isPlaying ? '⏸️' : '▶️';
+}
+
+function togglePlayPause() {
+    if (audioPlayer.paused) {
+        audioPlayer.play().catch(e => console.error("Playback resume error:", e));
+        isPlaying = true;
+    } else {
+        audioPlayer.pause();
+        isPlaying = false;
+    }
+    updatePlayPauseButton();
+}
+
+function pauseTrack() {
+    audioPlayer.pause();
+    isPlaying = false;
+    updatePlayPauseButton();
+}
+
+// --- New Feature: Sleep Timer ---
+
+function openSleepTimerModal() {
+    const lang = currentLanguage;
+    const minutes = prompt(
+        translations[lang]['sleep_timer_title'] + "\n\n" + (sleepTimerId ? 'Timer is currently active. Enter 0 to cancel.' : 'Enter number of minutes (e.g., 30):')
+    );
+    
+    const mins = parseInt(minutes);
+
+    if (mins > 0) {
+        startSleepTimer(mins);
+    } else if (mins === 0 && sleepTimerId) {
+        clearTimeout(sleepTimerId);
+        sleepTimerId = null;
+        alert("Sleep timer cancelled.");
+    } else if (minutes !== null && minutes !== '') {
+        alert("Please enter a valid number of minutes.");
     }
 }
 
-function updateFavoriteBtn(id) {
-    const favs = getFavs();
-    const favBtn = $('favBtn');
+function startSleepTimer(minutes) {
+    if (sleepTimerId) {
+        clearTimeout(sleepTimerId);
+    }
+
+    const lang = currentLanguage;
+    const durationMs = minutes * 60 * 1000;
     
-    // Clone node to safely remove and re-attach the listener
-    const newFavBtn = favBtn.cloneNode(true);
-    favBtn.parentNode.replaceChild(newFavBtn, favBtn);
+    alert(translations[lang]['timer_set_msg'](minutes));
+
+    sleepTimerId = setTimeout(() => {
+        pauseTrack();
+        alert(translations[lang]['timer_end_msg']);
+        sleepTimerId = null;
+    }, durationMs);
+}
+
+
+// --- Dynamic UI Rendering ---
+
+function renderHomePlaylists(playlists) {
+    const playlistContainer = document.querySelector('.daily-playlists .playlist-list');
+    playlistContainer.innerHTML = ''; 
+
+    playlists.slice(0, 2).forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'playlist-item';
+        // Mock play on click
+        item.onclick = () => loadAndPlayTrack(p); 
+        item.innerHTML = `
+            <img src="${p.image_url}" alt="Playlist Cover">
+            <div class="item-info">
+                <p class="title">${p.name}</p>
+                <p class="subtitle">By ${p.artist} • ${p.songs} ${translations[currentLanguage]['songs']}</p>
+            </div>
+        `;
+        playlistContainer.appendChild(item);
+    });
     
-    newFavBtn.textContent = favs[id]? '♥':'♡'; 
-    
-    newFavBtn.addEventListener('click', () => {
-        const newFavs = getFavs();
-        if (newFavs[id]) {
-            delete newFavs[id];
-        } else {
-            newFavs[id] = true;
-        }
-        localStorage.setItem(FAV_KEY, JSON.stringify(newFavs));
-        newFavBtn.textContent = newFavs[id]? '♥':'♡';
+    renderLibraryList(playlists);
+}
+
+function renderLibraryList(playlists) {
+    const libraryContainer = document.querySelector('.library-list');
+    libraryContainer.innerHTML = ''; 
+
+    playlists.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'library-item';
+        item.onclick = () => loadAndPlayTrack(p); 
+        item.innerHTML = `
+            <img src="${p.image_url}" alt="Cover" class="list-cover">
+            <div class="item-info">
+                <p class="title">${p.name}</p>
+                <p class="subtitle">By ${p.artist} • ${p.songs} ${translations[currentLanguage]['songs']}</p>
+            </div>
+            <button class="play-icon-small">▶️</button>
+        `;
+        libraryContainer.appendChild(item);
     });
 }
 
-// --- Download ZIP (create simple zip of HTML) ---
-$('downloadBtn').addEventListener('click', ()=>{ 
-    // This part is complex and often fails in live demos. I'm simplifying to download the HTML.
-    // For a real zip with all files, a server-side process is required.
-    const htmlContent = document.documentElement.outerHTML;
-    const blob = new Blob([htmlContent], {type:'text/html'}); 
-    const url=URL.createObjectURL(blob); 
-    const a=document.createElement('a'); 
-    a.href=url; 
-    a.download='chorkidhun-player.html'; 
-    a.click(); 
-    URL.revokeObjectURL(url); 
-});
 
+// --- Screen Navigation Logic (SPA Routing) ---
 
-// --- Initialize app ---
-renderGrid();
-// The initial track is loaded by the onYouTubeIframeAPIReady function.
+const screenMap = {
+    home: document.getElementById('home-screen'),
+    nowPlaying: document.getElementById('now-playing-screen'),
+    myMusic: document.getElementById('my-music-screen'),
+};
 
-// --- Cloud background (soft particles) ---
-(function(){
-    const c=$('bgCanvas');
-    if (!c) return; // Prevent error if canvas is not found
-    const ctx=c.getContext('2d');
-    function res(){
-        c.width=innerWidth;
-        c.height=innerHeight;
+const navIcons = document.querySelectorAll('.nav-icon');
+let currentScreen = 'home';
+const historyStack = ['home']; 
+
+function navigateTo(screenName) {
+    if (currentScreen === screenName) return;
+
+    if (screenName !== 'nowPlaying' && historyStack[historyStack.length - 1] !== screenName) {
+        historyStack.push(screenName);
     }
-    res();
-    window.addEventListener('resize',res);
-    const arr=[];
-    for(let i=0;i<30;i++){
-        arr.push({x:Math.random()*c.width,y:Math.random()*c.height,r:30+Math.random()*100,vx:0.2+Math.random()*0.6});
+    
+    Object.values(screenMap).forEach(screen => screen.classList.remove('active'));
+
+    if (screenMap[screenName]) {
+        screenMap[screenName].classList.add('active');
+        currentScreen = screenName;
     }
-    function loop(){
-        ctx.clearRect(0,0,c.width,c.height);
-        for(const p of arr){
-            p.x+=p.vx;
-            if(p.x>c.width)p.x=-p.r;
-            ctx.beginPath();
-            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-            grad.addColorStop(0, 'rgba(255,255,255,0.03)');
-            grad.addColorStop(1, 'rgba(255,255,255,0)');
-            ctx.fillStyle = grad;
-            ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
-            ctx.fill();
+
+    navIcons.forEach(icon => {
+        icon.classList.remove('active');
+        if (icon.getAttribute('data-screen') === screenName) {
+            icon.classList.add('active');
         }
-        requestAnimationFrame(loop);
+    });
+}
+
+function goBack() {
+    if (historyStack.length > 1) {
+        historyStack.pop(); 
+        const lastScreen = historyStack[historyStack.length - 1];
+        navigateTo(lastScreen);
     }
-    requestAnimationFrame(loop);
-})();
+}
+
+
+// --- Initialization ---
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Set initial language
+    const initialLang = document.getElementById('lang-select')?.value || 'en';
+    setLanguage(initialLang);
+    
+    // 2. Load data and playlists
+    authenticateAndFetch();
+    
+    // 3. Global Navigation Listeners
+    navIcons.forEach(icon => {
+        icon.addEventListener('click', () => {
+            const targetScreen = icon.getAttribute('data-screen');
+            if (targetScreen) navigateTo(targetScreen);
+        });
+    });
+
+    // 4. Play/Pause Listener
+    document.querySelector('.play-pause-btn').addEventListener('click', togglePlayPause);
+    
+    // 5. Curated Card Listener (Mock play)
+    document.querySelector('.curated-card').onclick = () => {
+        loadAndPlayTrack({
+            name: 'Starlit Reverie (Curated Mix)',
+            artist: 'Budiarti',
+            image_url: 'https://i.pravatar.cc/300?img=3',
+            preview_url: MOCK_PREVIEW_URL 
+        });
+    };
+});

@@ -1,83 +1,134 @@
-<!doctype html>
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ChorKi Dhun — Premium Music</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css"> </head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Starlight Music App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
 <body>
-<canvas id="bgCanvas" style="position:fixed;inset:0;z-index:-2;pointer-events:none"></canvas>
-<div class="app">
-  <aside class="sidebar">
-    <div class="logo">ChorKi Dhun</div>
-    <div class="searchBox">
-      <input id="searchInput" placeholder="Search tracks, artists..." />
-      <button class="btn" id="themeBtn">Theme</button>
+
+    <div id="app-container" class="mobile-app">
+        
+        <div id="home-screen" class="screen active">
+            <header class="header-greeting">
+                <div class="user-info">
+                    <img src="https://i.pravatar.cc/40?img=1" alt="Avatar" class="user-avatar">
+                    <h1 data-i18n="hi_user">Hi, Samantha</h1>
+                </div>
+                <div class="header-actions">
+                    <select id="lang-select" onchange="setLanguage(this.value)">
+                        <option value="en">EN</option>
+                        <option value="fr">FR</option>
+                    </select>
+                    <button class="icon-btn">🔍</button>
+                    <button class="icon-btn">❤️</button>
+                </div>
+            </header>
+            
+            <div class="category-tabs">
+                <button class="tab-btn active">All</button>
+                <button class="tab-btn">New Release</button>
+                <button class="tab-btn">Trending</button>
+                <button class="tab-btn">Top</button>
+            </div>
+
+            <section class="curated-section">
+                <h2>Curated & trending</h2>
+                <div class="curated-card"> <div class="curated-card-content">
+                        <h3 data-i18n="discover_weekly">Discover weekly</h3>
+                        <p>The original slow instrumental best playlists.</p>
+                        <div class="card-controls">
+                            <button class="play-icon-small">▶️</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="daily-playlists">
+                <div class="section-header">
+                    <h2 data-i18n="top_playlists">Top daily playlists</h2>
+                    <a href="#" class="see-all">See all</a>
+                </div>
+                <div class="playlist-list">
+                    </div>
+            </section>
+        </div>
+
+        <div id="now-playing-screen" class="screen">
+            <header class="now-playing-header">
+                <button class="icon-btn" onclick="goBack()">←</button>
+                <h2 data-i18n="now_playing">Now Playing</h2>
+                <button class="icon-btn">❤️</button>
+            </header>
+            
+            <div class="player-content">
+                <div class="artwork-circle">
+                    <img src="https://i.pravatar.cc/300?img=3" alt="Album Art">
+                </div>
+                <div class="track-info">
+                    <h1 class="track-title">Starlit Reverie</h1>
+                    <p class="track-artist">Budiarti x Lil Magrib</p>
+                </div>
+                
+                <p class="lyrics">
+                    Whispers in the midnight breeze,<br>
+                    Carrying dreams across the seas,<br>
+                    I close my eyes, let go, and drift away.
+                </p>
+
+                <div class="progress-bar-container">
+                    <input type="range" min="0" max="100" value="30" class="progress-slider"> 
+                    <div class="time-stamps">
+                        <span class="current-time">0:28</span>
+                        <span class="remaining-time">-3:15</span>
+                    </div>
+                </div>
+                
+                <div class="player-controls">
+                    <button class="control-btn small">🔀</button>
+                    <button class="control-btn large">⏮️</button>
+                    <button class="control-btn play-pause-btn large">⏸️</button> <button class="control-btn large">⏭️</button>
+                    <button class="control-btn small">🔁</button>
+                </div>
+                
+                <div class="extra-controls">
+                    <button class="icon-btn" onclick="openSleepTimerModal()">⏳</button> <button class="icon-btn">📱</button>
+                    <button class="icon-btn">...</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="my-music-screen" class="screen">
+            <header class="library-header">
+                <button class="icon-btn" onclick="goBack()">←</button>
+                <h2 data-i18n="my_music">My Music</h2>
+                <button class="icon-btn">...</button>
+            </header>
+            
+            <div class="library-tabs">
+                <button class="tab-btn active">All</button>
+                <button class="tab-btn">Playlists</button>
+                <button class="tab-btn">Liked Songs</button>
+                <button class="tab-btn">Downloads</button>
+            </div>
+
+            <div class="library-list">
+                </div>
+        </div>
+
+        <footer id="global-nav">
+            <nav class="nav-bar">
+                <button class="nav-icon active" data-screen="home">🏠<span class="label">Home</span></button>
+                <button class="nav-icon" data-screen="myMusic">🎵<span data-i18n="library" class="label">Library</span></button>
+                <button class="nav-icon" onclick="alert('Search Function')">🔍<span class="label">Search</span></button>
+                <button class="nav-icon" onclick="alert('Settings')">⚙️<span class="label">Settings</span></button>
+            </nav>
+        </footer>
+
     </div>
-    <nav class="nav">
-      <a href="#" data-section="home">Home</a>
-      <a href="#" data-section="library">Your Library</a>
-      <a href="#" data-section="favorites">Favorites</a>
-      <a href="#" data-section="trending">Top Mixes</a>
-    </nav>
-    <div style="margin-top:auto;display:flex;flex-direction:column;gap:8px">
-      <div class="btn" id="loginBtn">Login / Signup</div>
-      <div class="btn" id="downloadBtn">Download Player</div>
-      <button class="iconBtn" id="openPlayerBtn">Now Playing</button>
-    </div>
-  </aside>
 
-  <main class="main">
-    <div class="header">
-      <div class="searchBox">
-        <input id="searchInputMain" placeholder="Search tracks, artists..." />
-        <button class="btn" id="themeBtnMain">Theme</button>
-      </div>
-      <button class="iconBtn" id="openPlayerBtnMain">Now Playing</button>
-    </div>
-
-    <div class="section" data-section="home">
-      <h2>Welcome Back, ChorKi Dhun User</h2>
-      <div class="grid" id="trackGrid"></div>
-    </div>
-  </main>
-</div>
-
-<div class="nowPlaying" id="nowPlaying">
-  <button class="iconBtn closeBtn" id="closeBtn">X</button>
-  <button class="iconBtn favBtn" id="favBtn">♡</button>
-  <div class="nowPanel">
-    <div class="nowArt"><img id="nowArtImg" src="https://images.pexels.com/photos/1036378/pexels-photo-1036378.jpeg?auto=compress&cs=tinysrgb&h=640" style="width:100%;height:100%;object-fit:cover"/></div>
-    <div class="nowMeta">
-      <h2 id="nowTitle">Peaceful Clouds</h2>
-      <div id="nowArtist">Clouds Collective</div>
-      
-      <div class="controlsCenter">
-        <button class="iconBtn" id="prevBtnNow">⏮</button>
-        <button class="iconBtn" id="playBtnNow">▶</button>
-        <button class="iconBtn" id="nextBtnNow">⏭</button>
-      </div>
-
-      <div class="progressWrap">
-        <div class="time" id="timeCurNow">0:00</div>
-        <div class="progress" id="progressBarNow"><div></div></div>
-        <div class="time" id="timeTotalNow">0:00</div>
-      </div>
-
-      <div class="lyrics" id="lyricsBox"></div>
-    </div>
-  </div>
-</div>
-
-<div id="ytHolder" style="display:none"></div>
-<div id="loader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(2,6,23,0.95),rgba(2,6,23,0.95),rgba(2,6,23,0.95))">
-  <div class="spinner"></div>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
