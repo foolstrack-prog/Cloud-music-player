@@ -1,41 +1,40 @@
 // --- Data (Expanded, Multilingual Track List) ---
 const TRACKS = [
-  // Lofi/Background Tracks
-  {id:'jfKfPfyJRdk', title:'Peaceful Clouds (Lofi)', artist:'Clouds Collective', thumb:'https://images.pexels.com/photos/1036378/pexels-photo-1036378.jpeg?auto=compress&cs=tinysrgb&h=640', lyrics:[
-    'Gentle winds above the sea', 'Softly hum the lullabies', 'Clouds drift in harmony', 'Dreams unfold behind closed eyes'
+  // Hindi Pop/Bollywood Tracks (Simulated Playlist from your request)
+  {id:'y_m-AWX8p9c', title:'Pasoori', artist:'Shae Gill, Ali Sethi', thumb:'https://i.ytimg.com/vi/y_m-AWX8p9c/maxresdefault.jpg', lyrics:[
+    'Agg laawan majboori nu',
+    'Aan jan de pasoori nu',
+    'Aana si oh nahi aaya',
+    'Dil baariyan'
   ]},
-  {id:'DWcJFNfaw9c', title:'Deep Chill Mix (Lofi)', artist:'Night Loop', thumb:'https://images.pexels.com/photos/1484831/pexels-photo-1484831.jpeg?auto=compress&cs=tinysrgb&h=640', lyrics:['Lofi beats in the midnight sky','Warm glow, we fly high','Slow steps, heart sighs','Keep the rhythm, hush the night']},
-  
-  // Hindi Movie Song (Bollywood)
   {id:'hFj-2t4T91w', title:'Tum Hi Ho (Aashiqui 2)', artist:'Arijit Singh', thumb:'https://i.ytimg.com/vi/hFj-2t4T91w/maxresdefault.jpg', lyrics:[
     'Hum tere bin ab reh nahi sakte', 
     'Tere bina kya wajood mera',
     'Tujhse juda agar ho jaayenge',
     'Toh khud se hi ho jaayenge juda'
   ]},
-  
-  // English Pop Song (International)
-  {id:'kJQP7kiw5Fk', title:'Perfect', artist:'Ed Sheeran', thumb:'https://i.ytimg.com/vi/kJQP7kiw5Fk/maxresdefault.jpg', lyrics:[
-    "Baby, I'm dancing in the dark",
-    "With you between my arms",
-    "Barefoot on the grass",
-    "Listening to our favorite song"
+  {id:'g0-o8g9m86o', title:'Kesariya (Brahmastra)', artist:'Arijit Singh, Pritam', thumb:'https://i.ytimg.com/vi/g0-o8g9m86o/maxresdefault.jpg', lyrics:[
+    'Kesariya tera ishq hai piya',
+    'Rang jaaun jo main haath lagaun',
+    'Behke behke kadam hain mere',
+    'Tere saath hi thehar jaaun'
   ]},
-  
-  // Spanish Pop Song
-  {id:'apM480lq3oY', title:'Despacito', artist:'Luis Fonsi ft. Daddy Yankee', thumb:'https://i.ytimg.com/vi/apM480lq3oY/maxresdefault.jpg', lyrics:[
+  {id:'JcKkYv7zCIs', title:'Kaise Hua (Kabir Singh)', artist:'Vishal Mishra', thumb:'https://i.ytimg.com/vi/JcKkYv7zCIs/maxresdefault.jpg', lyrics:[
+    'Hothon pe naam hai tera',
+    'Mujhme kahin hai basera',
+    'Tera hi toh sara jahan hai',
+    'Kaise hua, kaise hua'
+  ]},
+  {id:'apM480lq3oY', title:'Despacito (International Example)', artist:'Luis Fonsi ft. Daddy Yankee', thumb:'https://i.ytimg.com/vi/apM480lq3oY/maxresdefault.jpg', lyrics:[
     'Des-pa-cito',
     'Quiero respirar tu cuello despacito',
     'Deja que te diga cosas al oído',
     'Para que te acuerdes si no estás conmigo'
   ]},
   
-  // Tamil Movie Song (Kollywood - Example)
-  {id:'x2L304N_b_E', title:'Vaathi Coming (Master)', artist:'Anirudh Ravichander', thumb:'https://i.ytimg.com/vi/x2L304N_b_E/maxresdefault.jpg', lyrics:[
-    'Maaranum Maranam vandhaalum',
-    'Thalaivan polae vaazhanum',
-    'Vaathi coming, Ohoh oh oh',
-    'Vaathi coming'
+  // Lofi/Background Track (Kept one for contrast)
+  {id:'jfKfPfyJRdk', title:'Peaceful Clouds (Lofi)', artist:'Clouds Collective', thumb:'https://images.pexels.com/photos/1036378/pexels-photo-1036378.jpeg?auto=compress&cs=tinysrgb&h=640', lyrics:[
+    'Gentle winds above the sea', 'Softly hum the lullabies', 'Clouds drift in harmony', 'Dreams unfold behind closed eyes'
   ]}
 ];
 
@@ -68,8 +67,8 @@ function onYouTubeIframeAPIReady() {
     const l=$('loader'); if(l) l.style.display='none';
 
     ytPlayer = new YT.Player('ytHolder', {
-        height: '390',
-        width: '640',
+        height: '1', // Minimized size for "audio-only"
+        width: '1',  // Minimized size for "audio-only"
         videoId: TRACKS[current].id, // Load the first song
         events: {
             'onReady': onPlayerReady,
@@ -80,7 +79,9 @@ function onYouTubeIframeAPIReady() {
             'controls': 0, // IMPORTANT: We use our custom controls
             'modestbranding': 1,
             'rel': 0, 
-            'autoplay': 0
+            'autoplay': 0,
+            'disablekb': 1, // Disable keyboard controls (for a pure UI experience)
+            'iv_load_policy': 3 // Disable annotations
         }
     });
 }
