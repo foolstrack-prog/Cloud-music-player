@@ -70,15 +70,10 @@ html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(
 
 /* Responsive Desktop */ 
 @media (min-width:900px){
-  .app{grid-template-columns:260px 1fr;grid-auto-rows:1fr;padding:18px;display:grid}
+  .app{grid-template-columns:260px 1fr;grid-auto-rows:1fr;padding:18px;display:grid;gap:20px;height:100vh}
   .sidebar{display:flex !important;background:linear-gradient(180deg,#06070a, #07101a);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);flex-direction:column;gap:12px}
   .main{padding:18px;overflow:auto}
-  .searchBox{display:flex !important}
-  .playerBar{left:298px;right:18px;bottom:18px;background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.03);height:auto}
-  .playerBar .controlsCenter{display:flex}
-  .playerBar .iconBtn{width:44px;height:44px;border-radius:8px;font-size:18px;border:none;margin:0;background:transparent}
-  .playerBar .iconBtn:hover{background:none}
-  .playerBar #playBtn{border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent}
-  .playerBar #playBtn:hover{background:rgba(255,255,255,0.1)}
-  .playerBar .progressWrap{display:flex;width:100%}
+  .searchBox{display:flex !important; gap:8px;align-items:center}
+  /* Restore desktop player bar look if needed, but keep mobile buttons for consistency */
+  .playerBar{left:298px;right:18px;bottom:18px;background:#282828;backdrop-filter:none;border:none;height:60px;border-radius:8px;}
 }

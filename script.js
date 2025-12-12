@@ -31,13 +31,27 @@ function renderGrid(){
 }
 
 // --- Select track ---
-function selectTrack(i){ current=i; updateNowPlaying(); loadTrackToYT(TRACKS[i].id); }
+function selectTrack(i){ 
+  current=i; 
+  updateNowPlaying(); 
+  loadTrackToYT(TRACKS[i].id); 
+  
+  // FIX: If the app is supposed to be playing, attempt to restart the new track immediately.
+  if (isPlaying) {
+      togglePlay(true); // Force play to restart UI and progress
+  }
+}
 
 // --- Update UI ---
 function updateNowPlaying(){
   const t = TRACKS[current];
   $('barArt').src = t.thumb; $('barTitle').textContent = t.title; $('barArtist').textContent = t.artist;
   $('nowArtImg').src = t.thumb; $('nowTitle').textContent = t.title; $('nowArtist').textContent = t.artist; 
+  
+  // Update favorited state if needed (favBtn is removed, but keeping logic for potential future use)
+  const favBtn = $('favBtn');
+  if (favBtn) favBtn.textContent = (favs[t.id]) ? '♥' : '♡';
+  
   renderLyrics();
 }
 
@@ -50,11 +64,16 @@ function renderLyrics(){
 function loadTrackToYT(id){
   const holder = $('ytHolder'); holder.innerHTML = '';
   const iframe = document.createElement('iframe');
+  
+  // FIX: Ensure autoplay=1 is in the URL
   iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&controls=0&iv_load_policy=3&modestbranding=1&rel=0&playsinline=1`;
   iframe.allow = 'autoplay';
   iframe.width = '1'; iframe.height='1'; iframe.style.opacity='0'; holder.appendChild(iframe);
+  
+  // FIX: Reset fake position when loading a new track
+  fakePos = 0;
+  
   // Note: cannot extract raw audio; we rely on iframe autoplay which some browsers may block until user interacts
-  // We'll toggle play state via user actions
 }
 
 // --- Play / Pause controls ---
@@ -62,19 +81,23 @@ const playBtnBar = $('playBtn');
 const playBtnNow = $('playBtnNow'); // New button in expanded view
 
 playBtnBar.addEventListener('click', ()=>{ togglePlay(); });
-playBtnNow.addEventListener('click', ()=>{ togglePlay(); }); // Listen to the new expanded play button
+// miniPlayBtn is removed in HTML
+if(playBtnNow) playBtnNow.addEventListener('click', ()=>{ togglePlay(); }); 
+// nowPlay is removed in HTML
 
-function togglePlay(){
+function togglePlay(forcePlay = false){ // Added optional argument to force play logic
+  const shouldPlay = forcePlay || !isPlaying;
+
   // Attempt to start audio by focusing iframe (best-effort); some browsers require gesture
-  if(!isPlaying){ 
+  if(shouldPlay){ 
     isPlaying=true; 
-    playBtnBar.textContent='⏸'; 
-    playBtnNow.textContent='⏸';
+    if(playBtnBar) playBtnBar.textContent='⏸'; 
+    if(playBtnNow) playBtnNow.textContent='⏸';
     startProgress(); 
   } else { 
     isPlaying=false; 
-    playBtnBar.textContent='▶'; 
-    playBtnNow.textContent='▶';
+    if(playBtnBar) playBtnBar.textContent='▶'; 
+    if(playBtnNow) playBtnNow.textContent='▶';
     stopProgress(); 
   }
 }
@@ -86,14 +109,6 @@ function stopProgress(){ clearInterval(progressInterval); }
 function updateProgress(){ 
   const pct = Math.min(1, fakePos/fakeDur); 
   
-  // Update Bar (mini-player) - hidden on mobile, visible on desktop
-  const progressBar = $('progressBar');
-  if(progressBar){
-      progressBar.firstElementChild.style.width = (pct*100)+'%'; 
-      $('timeCur').textContent = fmt(fakePos); 
-      $('timeTotal').textContent = fmt(fakeDur);
-  }
-
   // Update Now Playing (expanded)
   const progressBarNow = $('progressBarNow');
   if(progressBarNow){
@@ -101,22 +116,35 @@ function updateProgress(){
       $('timeCurNow').textContent = fmt(fakePos);
       $('timeTotalNow').textContent = fmt(fakeDur);
   }
+  // Note: There is no progress bar in the mini player (playerBar) in the mobile design
 }
 
 // --- Next / Prev ---
 const nextBtnNow = $('nextBtnNow');
 const prevBtnNow = $('prevBtnNow');
 
-// Bar buttons (reused for desktop and for mobile skip function if needed)
-$('nextBtn').addEventListener('click', ()=>{ nextTrack(); }); 
-$('prevBtn').addEventListener('click', ()=>{ prevTrack(); });
+// Desktop bar buttons (reused for mobile skip function if needed)
+const nextBtnBar = $('nextBtn');
+const prevBtnBar = $('prevBtn');
+if (nextBtnBar) nextBtnBar.addEventListener('click', ()=>{ nextTrack(); }); 
+if (prevBtnBar) prevBtnBar.addEventListener('click', ()=>{ prevTrack(); });
 
 // Now Playing buttons
-nextBtnNow.addEventListener('click', ()=>{ nextTrack(); });
-prevBtnNow.addEventListener('click', ()=>{ prevTrack(); });
+if(nextBtnNow) nextBtnNow.addEventListener('click', ()=>{ nextTrack(); });
+if(prevBtnNow) prevBtnNow.addEventListener('click', ()=>{ prevTrack(); });
 
-function nextTrack(){ current=(current+1)%TRACKS.length; fakePos=0; updateNowPlaying(); loadTrackToYT(TRACKS[current].id); if(isPlaying) startProgress(); }
-function prevTrack(){ current=(current-1+TRACKS.length)%TRACKS.length; fakePos=0; updateNowPlaying(); loadTrackToYT(TRACKS[current].id); if(isPlaying) startProgress(); }
+function nextTrack(){ 
+  current=(current+1)%TRACKS.length; 
+  updateNowPlaying(); 
+  loadTrackToYT(TRACKS[current].id); 
+  if(isPlaying) togglePlay(true); // FIX: Restart play on new track
+}
+function prevTrack(){ 
+  current=(current-1+TRACKS.length)%TRACKS.length; 
+  updateNowPlaying(); 
+  loadTrackToYT(TRACKS[current].id); 
+  if(isPlaying) togglePlay(true); // FIX: Restart play on new track
+}
 
 // --- Now Playing expand / collapse ---
 $('playerBar').addEventListener('click', (e)=>{ 
@@ -139,12 +167,10 @@ if (openNowBtn) openNowBtn.style.display = 'none';
 $('searchInput').addEventListener('input', (e)=>{ 
   const q=e.target.value.toLowerCase(); 
   const g=$('grid'); g.innerHTML=''; 
-  // FIXED: Use TRACKS.indexOf(t) to get the correct index from the master list
   TRACKS.filter(t=>t.title.toLowerCase().includes(q)||t.artist.toLowerCase().includes(q))
         .forEach((t)=>{ 
           const c=document.createElement('div'); c.className='card'; 
           c.innerHTML=`<img src="${t.thumb}"><div class='title'>${t.title}</div><div class='sub'>${t.artist}</div>`; 
-          // FIX APPLIED HERE: Get the index from the master TRACKS array
           c.onclick=()=>selectTrack(TRACKS.indexOf(t)); 
           g.appendChild(c); 
         }); 
@@ -165,7 +191,7 @@ if (themeBtn) {
             root.style.setProperty('--accent', '#60a5fa');
             root.style.setProperty('--glass', 'rgba(0,0,0,0.08)');
             document.body.style.color='#022';
-            document.body.style.background='#f0f3f8';
+            document.body.style.background='var(--bg)';
         } else { 
             // Dark Theme Variables (new default)
             root.style.setProperty('--bg', '#000');
@@ -183,10 +209,26 @@ if (themeBtn) {
 const FAV_KEY='chorkidhun_favs_v1'; 
 function loadFavs(){ try{return JSON.parse(localStorage.getItem(FAV_KEY)||'{}')}catch(e){return{}} }
 let favs = loadFavs(); 
-// Since favBtn is now removed from HTML, we remove its listener as well.
+const favBtn = $('favBtn');
+if (favBtn) { // Listener for the now playing screen favorite button
+    favBtn.addEventListener('click', ()=>{ 
+        const id=TRACKS[current].id; 
+        if(favs[id]) delete favs[id]; else favs[id]=true; 
+        localStorage.setItem(FAV_KEY, JSON.stringify(favs)); 
+        favBtn.textContent = favs[id]? '♥':'♡'; 
+    });
+}
 
 // --- Download ZIP (create simple zip of HTML) ---
-$('downloadBtn').addEventListener('click', ()=>{ const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='chorkidhun-player.html'; a.click(); URL.revokeObjectURL(url); });
+$('downloadBtn').addEventListener('click', ()=>{ 
+    const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'}); 
+    const url=URL.createObjectURL(blob); 
+    const a=document.createElement('a'); 
+    a.href=url; 
+    a.download='chorkidhun-player.html'; 
+    a.click(); 
+    URL.revokeObjectURL(url); 
+});
 
 // --- Auto-hide loader ---
 setTimeout(()=>{ const l=$('loader'); if(l) l.style.display='none'; },900);
@@ -194,10 +236,6 @@ setTimeout(()=>{ const l=$('loader'); if(l) l.style.display='none'; },900);
 // --- Initialize app ---
 renderGrid(); selectTrack(0);
 
-// --- Remove Mini draggable (popout) - it was removed from HTML
-// (function(){ const mini=$('miniPlayer'); let down=false, startY=0, startX=0; mini.addEventListener('mousedown',(e)=>{ down=true; startY=e.clientY; startX=e.clientX; document.body.style.cursor='grabbing'; }); window.addEventListener('mousemove',(e)=>{ if(!down) return; mini.style.right=(window.innerWidth - e.clientX - 120)+'px'; mini.style.bottom=(window.innerHeight - e.clientY - 60)+'px'; }); window.addEventListener('mouseup',()=>{ down=false; document.body.style.cursor='default'; }); })();
-
 // --- Cloud background (soft particles) ---
 (function(){ const c=$('bgCanvas'); const ctx=c.getContext('2d'); function res(){ c.width=innerWidth; c.height=innerHeight; } res(); window.addEventListener('resize',res); const arr=[]; for(let i=0;i<30;i++){ arr.push({x:Math.random()*c.width,y:Math.random()*c.height,r:30+Math.random()*100,vx:0.2+Math.random()*0.6}); }
   function loop(){ ctx.clearRect(0,0,c.width,c.height); for(const p of arr){ const g=ctx.createRadialGradient(p.x,p.y,p.r*0.1,p.x,p.y,p.r); g.addColorStop(0,'rgba(255,255,255,0.05)'); g.addColorStop(1,'rgba(255,255,255,0.01)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); p.x+=p.vx; if(p.x-p.r>c.width) p.x=-p.r; } requestAnimationFrame(loop); } loop(); })();
-}
